@@ -196,6 +196,8 @@ Once the WRED_ECN_QUEUE or WRED_ECN_PORT of FLEX_COUNTER_TABLE is enabled, Orcha
 <img src="ecn-wred-stats-images/orchagent_stats_enable_disable.png" alt="StateDB syncd interactions">
 </p> 
 
+If the user enables the WRED and ECN statistics on a platform in which all of the statistics of a flexcounter group are not supported, there will be an error message logged to syslog. For example, assume that none of the Queue-level Wred and ECN statistics are supported on a platform, enabling the same will log a syslog error.
+
 ### CLI Changes
 
 There are three new CLIs are introduced for this feature. And also the output of existing "show interface counters detailed" CLI would change. The details are illustrated below in this section. The CLI will display the WRED and ECN statistics only if the capability is supported by the platform. It gets the capability from STATE_DB and queries only the supported statistics from COUNTERS_DB.
@@ -250,7 +252,7 @@ Ethernet16    UC7               0                0
 ```
 #### CLI output on a platform which supports ECN statistics and does not support WRED statistics
 ```
-sonic-dut:~# show queue counters Ethernet16
+sonic-dut:~# show queue wred-ecn-counters Ethernet16
       Port    TxQ  EcnMarked/pkts  EcnMarked/bytes
 ----------  -----  --------------  ---------------
 Ethernet16    UC0               0                0
