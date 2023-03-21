@@ -1,8 +1,8 @@
-# ECN and WRED Statistics
+# WRED and ECN Statistics
 
 
 ## Table of Contents
-- [ECN and WRED Statistics](#ecn-and-wred-statistics)
+- [WRED and ECN Statistics](#wred-and-ecn-statistics)
   - [Table of Contents](#table-of-contents)
     - [Revision](#revision)
     - [Scope](#scope)
@@ -17,8 +17,9 @@
       - [Changes in COUNTERS_DB](#changes-in-counters_db)
       - [Changes in Orchagent](#changes-in-orchagent)
       - [CLI Changes](#cli-changes)
-        - [show queue counters on a ECN statistics supported platform](#show-queue-counters-on-a-ecn-statistics-supported-platform)
-        - [show queue counters on a platform which does not support ECN statistics](#show-queue-counters-on-a-platform-which-does-not-support-ecn-statistics)
+        - [CLI output on a WRED and ECN queue statistics supported platform](#cli-output-on-a-wred-and-ECN-queue-statistics-supported-platform)
+        - [CLI output on a platform which supports WRED drop statistics and does not support ECN statistics](#cli-output-on-a-platform-which-supports-wred-drop-statistics-and-does-not-support-ecn-statistics)
+        - [CLI output on a platform which supports ECN statistics and does not support WRED statistics](#cli-output-on-a-platform-which-supports-ecn-statistics-and-does-not-support-wred-statistics)
         - [show interface counters on a WRED drop statistics supported platform](#show-interface-counters-on-a-wred-drop-statistics-supported-platform)
         - [show interface counters on a platform which does not support WRED drop statistics](#show-interface-counters-on-a-platform-which-does-not-support-wred-drop-statistics)
     - [SAI API](#sai-api)
@@ -37,7 +38,7 @@
 
 ### Scope
 
-This document provides the high level design for ECN and WRED Statistics in SONiC
+This document provides the high level design for WRED and ECN Statistics in SONiC
 
 ### Abbreviations
 
@@ -57,7 +58,7 @@ The main goal of this feature is to provide better WRED impact visibility in SON
 
 The other goal of this feature is to display these statistics only if the underlying platform supports it. [CLI changes](#cli-changes) section explains this in detail. Every platform may have unique statistics capabilities, and they change over time, and so it is important for this feature to be capability based.
 
-We will accomplish both the goals by adding statistics support for per-queue WRED dropped packets/bytes, per-queue ECN marked packets/bytes and per-port WRED dropped packets. Existing “show interface counters detailed” CLI  will be enhanced for displaying the Port level WRED statistics. New CLI will be introduced for queue level WRED and ECN statistics.
+We will accomplish both the goals by adding statistics support for per-queue WRED dropped packets/bytes, per-queue ECN marked packets/bytes and per-port WRED dropped packets. Existing “show interface counters detailed” CLI  will be enhanced for displaying the port level WRED statistics. New CLI will be introduced for queue level WRED and ECN statistics.
 
 In this document, we will be using the term "WRED and ECN statistics" for combined statistics of per-queue WRED dropped packets/bytes, per-queue ECN marked packets/bytes and per-port WRED dropped packets. 
 
@@ -80,7 +81,7 @@ There are no architectural design changes as part of this design.
 
 This section covers the high level design of the WRED and ECN statistics feature. The following step-by-step short description provides an overview of the operations involved in this feature,
 
-1. Orchagent fetches the platform statistics capability for ECN and WRED counters from SAI
+1. Orchagent fetches the platform statistics capability for WRED and ECN Statistics from SAI
 2. The stats capability will be updated to STATE_DB by orchagent
 3. Based on the stats capability and CONFIG_DB status of respective statistics, Orchagent sets stat-ids to FLEX_COUNTERS_DB
     * In case, the platform is capable of WRED and ECN statistics,
@@ -150,7 +151,7 @@ The default capability will be isSupported=false for all the above statistics.
 
 #### Changes in FLEX_COUNTER_DB
 
-The flexcounter groups need to be created for polling the required statistics. Two new flex counter groups will be introduced for this feature. These are created during orchagent startup. 
+The flexcounter groups need to be created for polling the required statistics. Two new flex counter groups will be introduced for this feature. These are created during Orchagent startup. 
 
 On supported platforms,
 * The WRED and ECN queue counters will use the new flexcounter group WRED_ECN_QUEUE for following list of counters,
@@ -200,20 +201,21 @@ If the user enables the WRED and ECN statistics on a platform in which all of th
 
 ### CLI Changes
 
-There are three new CLIs are introduced for this feature. And also the output of existing "show interface counters detailed" CLI would change. The details are illustrated below in this section. The CLI will display the WRED and ECN statistics only if the capability is supported by the platform. It gets the capability from STATE_DB and queries only the supported statistics from COUNTERS_DB.
+There are few new CLIs and new CLI tokens are introduced for this feature. And also the output of existing "show interface counters detailed" CLI would change. The details are illustrated below in this section. The show CLIs will display the WRED and ECN statistics only if the capability is supported by the platform. It gets the capability from STATE_DB and queries only the supported statistics from COUNTERS_DB.
 
-* New CLI is introduced for enabling and disabling the WRED and ECN statistics globally
-    * Enable/Disable the Statistics : ```config wred-ecn-counters <queue | interface> <enable | disable>```
-    * Following are the usage of the above CLI command,
-        * To enable the WRED and ECN queue counters: ```config wred-ecn-counters queue enable```
-        * To disable the WRED and ECN queue counters: ```config wred-ecn-counters queue disable```
-        * To enable the WRED and ECN port counters: ```config wred-ecn-counters interface enable```
-        * To disable the WRED and ECN port counters: ```config wred-ecn-counters interface disable```
+* New CLI tokens are introduced under the existing ```counterpoll``` CLI for enabling and disabling the WRED and ECN statistics polling globally,
+    * Enable/Disable the queue level counters : ```counterpoll wred-queue <enable | disable>```
+    * Enable/Disable the port level counters : ```counterpoll wred-port <enable | disable>```
+* New CLI tokens are introduced under the existing ```counterpoll``` CLI for setting the polling interval of the statistics, 
+    * Set polling interval for queue level counters: ```counterpoll wred-queue interval <value>```
+    * Set polling interval for port level counters: ```counterpoll wred-port  interval <value>```
 
+* Existing ```counterpoll``` CLI  can be used to display counter status and polling interval,
+    * Display the status of the counters : ```counterpoll show```
+        
 * Following new CLIs are introduced for Per-queue WRED and ECN Statistics
-    * Statistics are cleared on user request : ```sonic-clear queue wred-ecn-counters```
-    * Display the statistics on the console      : ```show queue wred-ecn-counters [interface-name]```
-
+    * Statistics are cleared on user request : ```sonic-clear queue wredcounters```
+    * Display the statistics on the console      : ```show queue wredcounters [interface-name]```
 
 
 * Following existing CLIs are used for Per-port WRED statistics
@@ -223,7 +225,7 @@ There are three new CLIs are introduced for this feature. And also the output of
 #### CLI output on a WRED and ECN queue statistics supported platform
 
 ```
-sonic-dut:~# show queue wred-ecn-counters Ethernet16
+sonic-dut:~# show queue wredcounters Ethernet16
       Port    TxQ    WredDrp/pkts    WredDrp/bytes  EcnMarked/pkts EcnMarked/bytes
 ----------  -----  --------------  ---------------  -------------- ---------------
 Ethernet16    UC0               0                0               0               0   
@@ -237,7 +239,7 @@ Ethernet16    UC7               0                0               0              
 ```
 #### CLI output on a platform which supports WRED drop statistics and does not support ECN statistics
 ```
-sonic-dut:~# show queue wred-ecn-counters Ethernet16
+sonic-dut:~# show queue wredcounters Ethernet16
       Port    TxQ    WredDrp/pkts    WredDrp/bytes
 ----------  -----  --------------  ---------------
 Ethernet16    UC0               0                0
@@ -252,7 +254,7 @@ Ethernet16    UC7               0                0
 ```
 #### CLI output on a platform which supports ECN statistics and does not support WRED statistics
 ```
-sonic-dut:~# show queue wred-ecn-counters Ethernet16
+sonic-dut:~# show queue wredcounters Ethernet16
       Port    TxQ  EcnMarked/pkts  EcnMarked/bytes
 ----------  -----  --------------  ---------------
 Ethernet16    UC0               0                0
@@ -355,7 +357,7 @@ Broadcast Packets Transmitted.................. 32,892
 Time Since Counters Last Cleared............... None
 ```
 
-The "show queue wred-ecn-counters" fetches the statistics from COUNTERS_DB and will display to the console based on the capability of the platform. The below sequence diagram logically explains the "show queue wred-ecn-counters" interaction among CLI, STATE_DB and COUNTERS_DB for ECN and WRED statistics on supported platform,
+The "show queue wredcounters" fetches the statistics from COUNTERS_DB and will display to the console based on the capability of the platform. The below sequence diagram logically explains the "show queue wredcounters" interaction among CLI, STATE_DB and COUNTERS_DB for ECN and WRED statistics on supported platform,
 <p align=center>
 <img src="ecn-wred-stats-images/queue_counter_cli_flow.png" alt="queue CLI interactions">
 </p>
@@ -387,7 +389,7 @@ Following SAI statistics are used in this feature,
 
 ### Configuration and management
 
-The config CLI command ```"config wred-ecn-counters <queue | interface> <enable | disable>"``` will enable and disable the WRED and ECN statistics by interacting with the FLEX_COUNTER_TABLE table of CONFIG_DB.
+The config CLI commands ```"counterpoll wred-queue <enable | disable>"``` and ```"counterpoll wred-port <enable | disable>"``` will enable and disable the WRED and ECN statistics by interacting with the FLEX_COUNTER_TABLE table of CONFIG_DB.
 
 ### Manifest (if the feature is an Application Extension)
 Not applicable?
