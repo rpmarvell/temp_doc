@@ -111,6 +111,8 @@ CONFIG_DB changes are required to enable and disable these statistics globally. 
 }
 ```
 
+Default polling intervals for flexcounter groups WRED_ECN_QUEUE and WRED_ECN_PORT are 10000 millisecond and 1000 millisecond respectively. By default these flexcounter groups are disabled for polling.
+
 #### Changes in STATE_DB
 State DB will store information about WRED and ECN statistics support as per the platform capability. Statistics capabilities will be populated during Orchagent startup by checking the platform capability. These capabilities are used in CLI to display only the supported counters to user.
 
